@@ -197,6 +197,8 @@ uint8_t read_KEY1_GPIO() {
     return digitalRead(KEY);
 }
 
+#include <WiFi_BLE.h>
 void KEY1_PRESS_Handler(void *btn){
     Serial.printf("KEY is pressing!\r\n");
+    WiFi.begin(WiFi_Data.WiFi_store[0].SSID, WiFi_Data.WiFi_store[0].PassWord);
 }
