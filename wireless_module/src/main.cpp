@@ -53,15 +53,21 @@ void IoTTaskThread(void *argument){
 void RGBTaskThread(void *argument){
   FastLED.addLeds<WS2812, RGB_IO, RGB>(leds, 1);
   leds[0] = CRGB(255,0,0);
-  FastLED.setBrightness(64);  //set to only 25% brightness
+  FastLED.setBrightness(128);  //配置为50%最大亮度
   
   for(;;){
     if(ProjectData.blestatus == true){
       leds[0] = CRGB(255,0,0);
-      // esp_err_t err = esp_ble_gap_read_rssi(*connectedDeviceAddress.getNative());
-      // FastLED.setBrightness(0);
+      esp_ble_gap_read_rssi(*connectedDeviceAddress.getNative()); //获取连接设备的rssi信号强度
+
+      int rssi_brightness = 120 + ProjectData.ble_rssi * 2;
+      if(rssi_brightness <= 10) { rssi_brightness = 10; }
+      // Serial.printf("brightness : %d\r\n", rssi_brightness);
+
+      FastLED.setBrightness((uint8_t)rssi_brightness);  //根据信号强度来决定亮度
     }else{
       leds[0] = CRGB(0,255,0);
+      FastLED.setBrightness(64);
     }
 
     FastLED.show();

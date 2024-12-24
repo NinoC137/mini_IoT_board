@@ -49,6 +49,8 @@ public:
   bool wifistatus;
   std::string time;
 
+  int ble_rssi = 0; //强度在 -100 ～ 0 之间
+
   int worktime; //单位为秒
   int runTime;  //单位为秒
 
@@ -89,7 +91,7 @@ extern BLEDescriptor RX_Descriptor;
 extern BLECharacteristic TX_Characteristics;
 extern BLEDescriptor TX_Descriptor;
 
-// extern BLEAddress connectedDeviceAddress;
+extern BLEAddress connectedDeviceAddress;
 
 void WiFi_BLE_setUp();  //在WiFi开启之后调用此函数
 void BLEHandler();

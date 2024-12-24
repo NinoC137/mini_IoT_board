@@ -12,7 +12,7 @@ BLEDescriptor RX_Descriptor(BLEUUID((uint16_t)0x2901));                         
 BLECharacteristic TX_Characteristics("ab1adb06-6724-11e9-a923-1681be663d3e", BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY); // 发送字符串的特征值
 BLEDescriptor TX_Descriptor(BLEUUID((uint16_t)0x2902));                                                                                              // 发送字符串描述符
 
-// BLEAddress connectedDeviceAddress = BLEAddress((uint8_t*)nullptr);
+BLEAddress connectedDeviceAddress = BLEAddress("00:00:00:00:00:00");
 
 std::string value;
 char *BLE_json_root;
@@ -39,7 +39,8 @@ struct tm timeinfo;
 void MyServerCallbacks::onConnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) // 开始连接函数
 {
     ProjectData.blestatus = true;
-    // connectedDeviceAddress = BLEAddress(param->connect.remote_bda);
+    connectedDeviceAddress = BLEAddress(param->connect.remote_bda);
+    Serial.printf("your ble address is :%s\r\n", connectedDeviceAddress.toString().c_str());
 }
 void MyServerCallbacks::onDisconnect(BLEServer *pServer) // 断开连接函数
 {
@@ -58,8 +59,9 @@ void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic) // 写方法
 void handle_rssi_event(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* param) {
     if (event == ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT) {
         if (param->read_rssi_cmpl.status == ESP_BT_STATUS_SUCCESS) {
-            Serial.print("RSSI of connected device: ");
-            Serial.println(param->read_rssi_cmpl.rssi);
+            ProjectData.ble_rssi = param->read_rssi_cmpl.rssi;
+            // Serial.print("RSSI of connected device: ");
+            // Serial.println(ProjectData.ble_rssi);
         } else {
             Serial.println("Failed to read RSSI.");
         }
@@ -111,7 +113,7 @@ void WiFi_BLE_setUp()
     pServer->setCallbacks(new MyServerCallbacks()); // 设置连接和断开调用类
 
     // 注册 RSSI 回调
-    // esp_ble_gap_register_callback(handle_rssi_event);
+    esp_ble_gap_register_callback(handle_rssi_event);
 
     pService->addCharacteristic(&RX_Characteristics);
     RX_Descriptor.setValue("BLE Receive");
