@@ -81,6 +81,39 @@ void cmd3(cJSON *root) // 读取设备保存的WiFi(一个)
     free(json_string);
 }
 
+void cmd4(cJSON *root){
+    cJSON *cmd_R = cJSON_GetObjectItem(root, "R");
+    cJSON *cmd_G = cJSON_GetObjectItem(root, "G");
+    cJSON *cmd_B = cJSON_GetObjectItem(root, "B");
+    if (cmd_R == NULL || cmd_G == NULL || cmd_B == NULL)
+    {
+        TX_Characteristics.setValue("json string error!!");
+        TX_Characteristics.notify();
+        return;
+    }
+
+    RGB_Mode = 3;
+    R = cmd_R->valueint;
+    G = cmd_G->valueint;
+    B = cmd_B->valueint;
+
+    cJSON *tx_root = cJSON_CreateObject();
+    cJSON_AddItemToObject(tx_root, "res", cJSON_CreateNumber(0));
+    cJSON_AddItemToObject(tx_root, "cmd", cJSON_CreateNumber(4));
+    cJSON_AddItemToObject(tx_root, "R", cJSON_CreateNumber(R));
+    cJSON_AddItemToObject(tx_root, "G", cJSON_CreateNumber(G));
+    cJSON_AddItemToObject(tx_root, "B", cJSON_CreateNumber(B));
+    char *json_string = cJSON_Print(tx_root);
+    // 生成完毕, 准备发送
+    TX_Characteristics.setValue(json_string);
+    TX_Characteristics.notify();
+#if DEBUG
+    Serial.printf("%s\r\n", json_string);
+#endif // DEBUG
+    cJSON_Delete(tx_root);
+    free(json_string);
+}
+
 void cmd6(cJSON *root) // 设置时区
 {
     cJSON *cmd_timezone = cJSON_GetObjectItem(root, "timezone");

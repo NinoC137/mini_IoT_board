@@ -51,6 +51,7 @@ void IoTTaskThread(void *argument){
 }
 
 uint8_t RGB_Mode = 0;
+uint8_t R, G, B;
 void RGBTaskThread(void *argument){
   FastLED.addLeds<WS2812, RGB_IO, RGB>(leds, 1);
   leds[0] = CRGB(255,0,0);
@@ -106,6 +107,9 @@ void RGBTaskThread(void *argument){
       vTaskDelay(300);
       break;
     
+    case 3:
+    leds[0] = CRGB(R, G, B);
+      break;
     default:
       RGB_Mode = 0;
       break;

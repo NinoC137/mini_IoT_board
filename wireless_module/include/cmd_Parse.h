@@ -9,6 +9,8 @@ void cmd2(cJSON *root); // 设置WiFi
 
 void cmd3(cJSON *root); // 读取设备保存的WiFi(一个)
 
+void cmd4(cJSON *root); //配置RGB灯属性
+
 void cmd6(cJSON *root); // 设置时区
 
 void cmd7(cJSON *root); // 查询时区

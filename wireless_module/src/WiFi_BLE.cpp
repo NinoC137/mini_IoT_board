@@ -158,6 +158,9 @@ void BLEHandler()
         case 3:
             cmd3(root);
             break;
+        case 4:
+            cmd4(root);
+            break;
         case 6:
             cmd6(root);
             break;

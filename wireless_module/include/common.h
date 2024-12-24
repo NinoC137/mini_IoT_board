@@ -6,5 +6,6 @@
 #define RGB_IO 15
 
 extern uint8_t RGB_Mode;
+extern uint8_t R, G, B;
 
 #endif 
