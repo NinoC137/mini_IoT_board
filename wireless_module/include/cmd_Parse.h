@@ -3,7 +3,7 @@
 
 #include "WiFi_BLE.h"
 
-void cmd1(); // 扫描3个WiFi
+void cmd1(cJSON *root); //配置RGB灯光效
 
 void cmd2(cJSON *root); // 设置WiFi
 
@@ -22,8 +22,6 @@ void cmd13(cJSON *root); // 读取服务器设置
 void cmd14(cJSON *root); // 心跳包设置
 
 void cmd15(cJSON *root); // 读取心跳包设置
-
-void cmd16(); // 通过WiFi向服务器发送事件日志
 
 void cmd17(); // 通过蓝牙向宿主机发送事件日志
 

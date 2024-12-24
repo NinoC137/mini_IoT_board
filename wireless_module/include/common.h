@@ -5,4 +5,6 @@
 #define KEY 13
 #define RGB_IO 15
 
+extern uint8_t RGB_Mode;
+
 #endif 

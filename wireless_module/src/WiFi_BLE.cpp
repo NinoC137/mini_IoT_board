@@ -150,7 +150,7 @@ void BLEHandler()
         switch (cmd->valueint)
         {
         case 1:
-            cmd1();
+            cmd1(root);
             break;
         case 2:
             cmd2(root);

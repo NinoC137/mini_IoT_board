@@ -1,58 +1,46 @@
 #include "cmd_Parse.h"
+#include "common.h"
 
-void cmd1()
+void cmd1(cJSON *root)
 {
-    WiFi.disconnect();
-    WiFi.scanNetworks(3); // 扫描3个WiFi
+    cJSON *cmd_mode = cJSON_GetObjectItem(root, "mode");
+    if (cmd_mode == NULL)
+    {
+        TX_Characteristics.setValue("json string error!!");
+        TX_Characteristics.notify();
+        return;
+    }
+
+    RGB_Mode = cmd_mode->valueint;
 
     cJSON *tx_root = cJSON_CreateObject();
-    cJSON *tx_wifi_array = cJSON_CreateArray();
-    // 开始生成json串
-    if (WiFi.encryptionType(1) != 0)
-    {
-        cJSON_AddItemToObject(tx_root, "res", cJSON_CreateNumber(0));
-    }
-    else
-    {
-        cJSON_AddItemToObject(tx_root, "res", cJSON_CreateNumber(1));
-    }
+    cJSON_AddItemToObject(tx_root, "res", cJSON_CreateNumber(0));
     cJSON_AddItemToObject(tx_root, "cmd", cJSON_CreateNumber(1));
-    cJSON_AddItemToObject(tx_root, "wifi", tx_wifi_array);
-    for (int i = 0; i < 3; i++)
-    {
-        cJSON *tx_wifi_objcet = cJSON_CreateObject();
-        cJSON_AddItemToArray(tx_wifi_array, tx_wifi_objcet);
-        cJSON_AddItemToObject(tx_wifi_objcet, "ssid", cJSON_CreateString(WiFi.SSID(i).c_str()));
-        cJSON_AddItemToObject(tx_wifi_objcet, "enc", cJSON_CreateNumber(WiFi.encryptionType(i)));
-        cJSON_AddItemToObject(tx_wifi_objcet, "RSSI", cJSON_CreateNumber(WiFi.RSSI(i)));
-    }
+    cJSON_AddItemToObject(tx_root, "mode", cJSON_CreateNumber(RGB_Mode));
     char *json_string = cJSON_Print(tx_root);
     // 生成完毕, 准备发送
     TX_Characteristics.setValue(json_string);
     TX_Characteristics.notify();
-
 #if DEBUG
     Serial.printf("%s\r\n", json_string);
 #endif // DEBUG
     cJSON_Delete(tx_root);
     free(json_string);
-    WiFi.begin(WiFi_Data.WiFi_store[0].SSID, WiFi_Data.WiFi_store[0].PassWord);
 }
 
 void cmd2(cJSON *root)
 {
-    cJSON *cmd_idx = cJSON_GetObjectItem(root, "idx");
     cJSON *cmd_ssid = cJSON_GetObjectItem(root, "ssid");
-    cJSON *cmd_pws = cJSON_GetObjectItem(root, "pws");
-    if (cmd_idx == NULL || cmd_ssid == NULL || cmd_pws == NULL)
+    cJSON *cmd_psw = cJSON_GetObjectItem(root, "psw");
+    if (cmd_ssid == NULL || cmd_psw == NULL)
     {
         TX_Characteristics.setValue("json string error!!");
         TX_Characteristics.notify();
         return;
     }
     // 将数据存储至全局变量
-    WiFi_Data.WiFi_store[cmd_idx->valueint].SSID = cmd_ssid->valuestring;
-    WiFi_Data.WiFi_store[cmd_idx->valueint].PassWord = cmd_pws->valuestring;
+    WiFi_Data.WiFi_store[0].SSID = strdup(cmd_ssid->valuestring);
+    WiFi_Data.WiFi_store[0].PassWord = strdup(cmd_psw->valuestring);
 
     cJSON *tx_root = cJSON_CreateObject();
     cJSON_AddItemToObject(tx_root, "res", cJSON_CreateNumber(0));
@@ -66,6 +54,8 @@ void cmd2(cJSON *root)
 #endif // DEBUG
     cJSON_Delete(tx_root);
     free(json_string);
+
+    WiFi.begin(WiFi_Data.WiFi_store[0].SSID, WiFi_Data.WiFi_store[0].PassWord);
 }
 
 void cmd3(cJSON *root) // 读取设备保存的WiFi(一个)
@@ -76,13 +66,9 @@ void cmd3(cJSON *root) // 读取设备保存的WiFi(一个)
 
     cJSON_AddItemToObject(tx_root, "res", cJSON_CreateNumber(0));
     cJSON_AddItemToObject(tx_root, "cmd", cJSON_CreateNumber(3));
-    cJSON_AddItemToObject(tx_root, "wifi", tx_wifi_array);
 
-    cJSON *tx_wifi_objcet = cJSON_CreateObject();
-    cJSON_AddItemToArray(tx_wifi_array, tx_wifi_objcet);
-    cJSON_AddItemToObject(tx_wifi_objcet, "idx", cJSON_CreateNumber(0));
-    cJSON_AddItemToObject(tx_wifi_objcet, "ssid", cJSON_CreateString(WiFi_Data.WiFi_store[0].SSID));
-    cJSON_AddItemToObject(tx_wifi_objcet, "psw", cJSON_CreateString(WiFi_Data.WiFi_store[0].PassWord));
+    cJSON_AddItemToObject(tx_root, "ssid", cJSON_CreateString(WiFi_Data.WiFi_store[0].SSID));
+    cJSON_AddItemToObject(tx_root, "psw", cJSON_CreateString(WiFi_Data.WiFi_store[0].PassWord));
 
     char *json_string = cJSON_Print(tx_root);
     // 生成完毕, 准备发送

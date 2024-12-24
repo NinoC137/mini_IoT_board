@@ -50,13 +50,21 @@ void IoTTaskThread(void *argument){
   }
 }
 
+uint8_t RGB_Mode = 0;
 void RGBTaskThread(void *argument){
   FastLED.addLeds<WS2812, RGB_IO, RGB>(leds, 1);
   leds[0] = CRGB(255,0,0);
   FastLED.setBrightness(128);  //配置为50%最大亮度
+
+  uint8_t random_r = random8();
+  uint8_t random_g = random8();
+  uint8_t random_b = random8();
   
   for(;;){
-    if(ProjectData.blestatus == true){
+    switch (RGB_Mode)
+    {
+    case 0:
+      if(ProjectData.blestatus == true){
       leds[0] = CRGB(255,0,0);
       esp_ble_gap_read_rssi(*connectedDeviceAddress.getNative()); //获取连接设备的rssi信号强度
 
@@ -65,11 +73,44 @@ void RGBTaskThread(void *argument){
       // Serial.printf("brightness : %d\r\n", rssi_brightness);
 
       FastLED.setBrightness((uint8_t)rssi_brightness);  //根据信号强度来决定亮度
-    }else{
-      leds[0] = CRGB(0,255,0);
+      }else{
+        leds[0] = CRGB(0,255,0);
+        FastLED.setBrightness(64);
+      }
+      break;
+    
+    case 1:
       FastLED.setBrightness(64);
-    }
+      for(uint8_t count = 0; count < 255; count++){
+        leds[0] = CRGB(count, count, 0);
+        vTaskDelay(2);
+        FastLED.show();
+      }
+      for(uint8_t count = 0; count < 255; count++){
+        leds[0] = CRGB(0, count, count);
+        vTaskDelay(2);
+        FastLED.show();
+      }
+      for(uint8_t count = 0; count < 255; count++){
+        leds[0] = CRGB(count, 0, count);
+        vTaskDelay(2);
+        FastLED.show();
+      }
+      break;
 
+    case 2:
+      random_r = random8();
+      random_g = random8();
+      random_b = random8();
+      leds[0] = CRGB(random_r, random_g, random_b);
+      vTaskDelay(300);
+      break;
+    
+    default:
+      RGB_Mode = 0;
+      break;
+    }
+    
     FastLED.show();
     vTaskDelay(5);
   }
