@@ -2,6 +2,7 @@
 #include "WiFi_BLE.h"
 #include "common.h"
 
+#include "LED.h"
 #include "multi_button.h"
 #include "FastLED.h"
 
@@ -124,28 +125,21 @@ void LEDTaskThread(void *argument){
   uint8_t led_counter = 0;
   uint8_t led_mode = 0;
 
+  LED_Mutex = xSemaphoreCreateMutex();
+
   pinMode(SYSTEM_LED, OUTPUT);
-  digitalWrite(SYSTEM_LED, 0);
+  LED_On();
   delay(100);
-  digitalWrite(SYSTEM_LED, 1);
+  LED_Off();
   delay(100);
-  digitalWrite(SYSTEM_LED, 0);
+  LED_On();
 
   for(;;){
     led_counter++;
 
     if(led_counter >= 100){
-
       led_counter = 0;
-
-      if(led_mode == 0){
-        led_mode = 1;
-        digitalWrite(SYSTEM_LED, 0);
-      }else{
-        led_mode = 0;
-        digitalWrite(SYSTEM_LED, 1);
-      }
-
+      LED_Toggle();
     }
 
     vTaskDelay(5);
