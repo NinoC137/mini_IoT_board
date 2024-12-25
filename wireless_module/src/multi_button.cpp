@@ -198,7 +198,20 @@ uint8_t read_KEY1_GPIO() {
 }
 
 #include <WiFi_BLE.h>
+#include "LED.h"
 void KEY1_PRESS_Handler(void *btn){
     Serial.printf("KEY is pressing!\r\n");
-    WiFi.begin(WiFi_Data.WiFi_store[0].SSID, WiFi_Data.WiFi_store[0].PassWord);
+    for(uint8_t count = 0; count < 8; count++){
+        LED_Blink();
+        WiFi.begin(WiFi_Data.WiFi_store[0].SSID, WiFi_Data.WiFi_store[0].PassWord);
+        vTaskDelay(100);
+        if(WiFi.status() == WL_CONNECTED)
+        {
+            for(uint8_t LED_count = 0; LED_count < 3; LED_count++){
+                LED_Toggle();
+                vTaskDelay(300);
+            }
+            break; 
+        }
+    }
 }

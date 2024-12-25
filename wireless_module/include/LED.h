@@ -12,4 +12,6 @@ void LED_Off();
 
 void LED_Toggle();
 
+void LED_Blink();
+
 #endif

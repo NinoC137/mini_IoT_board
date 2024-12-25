@@ -45,3 +45,10 @@ void LED_Toggle()
         LED_Off();
     }
 }
+
+void LED_Blink()
+{
+    LED_Toggle();
+    vTaskDelay(30);
+    LED_Toggle();
+}
