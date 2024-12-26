@@ -199,6 +199,7 @@ uint8_t read_KEY1_GPIO() {
 
 #include <WiFi_BLE.h>
 #include "LED.h"
+//长按按键尝试连接保存的wifi，伴随led快速闪烁，若连接成功则会慢闪3次
 void KEY1_PRESS_Handler(void *btn){
     Serial.printf("KEY is pressing!\r\n");
     for(uint8_t count = 0; count < 8; count++){

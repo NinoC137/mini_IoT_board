@@ -81,7 +81,8 @@ void cmd3(cJSON *root) // 读取设备保存的WiFi(一个)
     free(json_string);
 }
 
-void cmd4(cJSON *root){
+void cmd4(cJSON *root)
+{
     cJSON *cmd_R = cJSON_GetObjectItem(root, "R");
     cJSON *cmd_G = cJSON_GetObjectItem(root, "G");
     cJSON *cmd_B = cJSON_GetObjectItem(root, "B");
@@ -112,6 +113,10 @@ void cmd4(cJSON *root){
 #endif // DEBUG
     cJSON_Delete(tx_root);
     free(json_string);
+}
+
+void cmd5(cJSON *root)
+{
 }
 
 void cmd6(cJSON *root) // 设置时区

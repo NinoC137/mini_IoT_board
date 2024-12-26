@@ -14,8 +14,6 @@ void LED_On()
     }
     else
     {
-        /* We could not obtain the semaphore and can therefore not access
-            the shared resource safely. */
     }
 }
 
@@ -29,8 +27,6 @@ void LED_Off()
     }
     else
     {
-        /* We could not obtain the semaphore and can therefore not access
-            the shared resource safely. */
     }
 }
 

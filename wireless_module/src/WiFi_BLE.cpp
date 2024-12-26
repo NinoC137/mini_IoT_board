@@ -135,7 +135,6 @@ void WiFi_BLE_setUp()
 
 void BLEHandler()
 {
-    // 蓝牙信息处理部分  --  注意手机发送端的MTU应设置为256(反正不要是默认的23字节,json包发不过去也读不回来)
     if (value.length() > 0)
     {
         BLE_json_root = (char *)value.data();
