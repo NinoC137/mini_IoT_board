@@ -117,6 +117,7 @@ void cmd4(cJSON *root)
 
 void cmd5(cJSON *root)
 {
+    callAPI(); 
 }
 
 void cmd6(cJSON *root) // 设置时区

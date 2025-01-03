@@ -31,7 +31,7 @@ void setup()
 
   xTaskCreatePinnedToCore(KEYTaskThread, "KEYTask", 1024 * 4, NULL, 1, &KEYTaskHandle, 0);
 
-  xTaskCreatePinnedToCore(IoTTaskThread, "IoTTask", 1024 * 6, NULL, 2, &IoTTaskHandle, 1);
+  xTaskCreatePinnedToCore(IoTTaskThread, "IoTTask", 1024 * 12, NULL, 2, &IoTTaskHandle, 1);
 }
 
 void loop()
@@ -42,11 +42,16 @@ void loop()
 void IoTTaskThread(void *argument){ 
   WiFi_BLE_setUp();
 
+  callAPI();
+
   for(;;){
     BLEHandler();
-    // WiFiHandler();
-    updateLocalTime();
     
+    if(WiFi.isConnected() == true){
+      // WiFiHandler();
+      updateLocalTime();
+    }
+
     vTaskDelay(5);
   }
 }

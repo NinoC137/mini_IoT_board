@@ -4,6 +4,9 @@ WiFiClient client; // ESP32设置为客户端, TCP连接服务器
 const IPAddress serverIP(192, 168, 1, 1);
 uint16_t serverPort = 8888;
 
+const char* apiUrl = "https://api.deepseek.com/chat/completions";
+const char* apiKey = "sk-96a3f94798ed41e1a44b5b997a3c27f4";
+
 String readTCP;
 
 BLEUUID ServiceUUID("ab1ad444-6724-11e9-a923-1681be663d3e");                                                                                         // 服务的UUID
@@ -56,13 +59,18 @@ void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic) // 写方法
 }
 
 // RSSI 回调处理
-void handle_rssi_event(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* param) {
-    if (event == ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT) {
-        if (param->read_rssi_cmpl.status == ESP_BT_STATUS_SUCCESS) {
+void handle_rssi_event(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
+{
+    if (event == ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT)
+    {
+        if (param->read_rssi_cmpl.status == ESP_BT_STATUS_SUCCESS)
+        {
             ProjectData.ble_rssi = param->read_rssi_cmpl.rssi;
             // Serial.print("RSSI of connected device: ");
             // Serial.println(ProjectData.ble_rssi);
-        } else {
+        }
+        else
+        {
             Serial.println("Failed to read RSSI.");
         }
     }
@@ -87,7 +95,7 @@ void WiFi_BLE_setUp()
         pos = WiFi_Data.WiFi_store[0].devID.find(":");
     }
 
-    if (WiFi_Data.WiFi_store[0].ipv4 != 0)
+    if (WiFi.isConnected() == true)
     {
         ProjectData.wifistatus = true;
     }
@@ -160,6 +168,9 @@ void BLEHandler()
         case 4:
             cmd4(root);
             break;
+        case 5:
+            cmd5(root);
+            break;
         case 6:
             cmd6(root);
             break;
@@ -200,6 +211,7 @@ void WiFiHandler()
 {
     // WIFI连接服务器部分
     int httpCode = http.GET();
+    Serial.printf("WiFi: Get http code: %d\r\n", httpCode);
     if (httpCode > 0)
     {
         if (httpCode == HTTP_CODE_OK) // HTTP请求无异常
@@ -243,5 +255,99 @@ void updateLocalTime()
         sprintf(time_str, "%04d-%02d-%02d %02d:%02d:%02d", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
                 timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
         ProjectData.time = std::string(time_str);
+    }
+}
+
+void callAPI()
+{
+    // 检查Wi-Fi连接状态
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        HTTPClient http_ai;
+
+        // 开始HTTP请求
+        http_ai.begin(apiUrl);
+        http_ai.addHeader("Content-Type", "application/json");
+        http_ai.addHeader("Authorization", "Bearer " + String(apiKey));
+
+        // 创建请求体
+        cJSON *jsonRequest = cJSON_CreateObject();
+        cJSON_AddStringToObject(jsonRequest, "model", "deepseek-chat");
+
+        // 创建messages数组
+        cJSON *messagesArray = cJSON_AddArrayToObject(jsonRequest, "messages");
+
+        // 添加system消息
+        cJSON *systemMessage = cJSON_CreateObject();
+        cJSON_AddStringToObject(systemMessage, "role", "system");
+        cJSON_AddStringToObject(systemMessage, "content", "You are a helpful assistant");
+        cJSON_AddItemToArray(messagesArray, systemMessage);
+
+        // 添加user消息
+        cJSON *userMessage = cJSON_CreateObject();
+        cJSON_AddStringToObject(userMessage, "role", "user");
+        cJSON_AddStringToObject(userMessage, "content","hello!");
+        cJSON_AddItemToArray(messagesArray, userMessage);
+
+        // 添加stream字段
+        cJSON_AddBoolToObject(jsonRequest, "stream", false);
+
+        // 将cJSON对象转换为字符串
+        char *requestBody = cJSON_Print(jsonRequest);
+        Serial.println("请求体: " + String(requestBody));
+
+        // 发送POST请求
+        int httpResponseCode = http_ai.POST(requestBody);
+
+        // 检查响应状态
+        if (httpResponseCode > 0)
+        {
+            String response = http_ai.getString();
+            Serial.println("HTTP响应代码: " + String(httpResponseCode));
+            Serial.println("响应内容: " + response);
+
+            // 解析响应数据
+            cJSON *jsonResponse = cJSON_Parse(response.c_str());
+            if (jsonResponse != NULL)
+            {
+                cJSON *choicesArray = cJSON_GetObjectItemCaseSensitive(jsonResponse, "choices");
+                if (cJSON_IsArray(choicesArray))
+                {
+                    cJSON *firstChoice = cJSON_GetArrayItem(choicesArray, 0);
+                    if (firstChoice != NULL)
+                    {
+                        cJSON *message = cJSON_GetObjectItemCaseSensitive(firstChoice, "message");
+                        if (message != NULL)
+                        {
+                            cJSON *content = cJSON_GetObjectItemCaseSensitive(message, "content");
+                            if (cJSON_IsString(content) && (content->valuestring != NULL))
+                            {
+                                Serial.println("AI回复: " + String(content->valuestring));
+                            }
+                        }
+                    }
+                }
+                cJSON_Delete(jsonResponse);
+            }
+            else
+            {
+                Serial.println("解析JSON响应失败");
+            }
+        }
+        else
+        {
+            Serial.println("请求失败，错误代码: " + String(httpResponseCode));
+        }
+
+        // 释放内存
+        cJSON_Delete(jsonRequest);
+        free(requestBody);
+
+        // 结束HTTP请求
+        http_ai.end();
+    }
+    else
+    {
+        Serial.println("Wi-Fi未连接");
     }
 }
