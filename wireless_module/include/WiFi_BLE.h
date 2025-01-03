@@ -101,4 +101,6 @@ void updateLocalTime();
 
 void testAPI();
 
+void AI_API(std::string *user_token);
+
 #endif // !_WIFI_BLE_H

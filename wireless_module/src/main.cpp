@@ -34,9 +34,24 @@ void setup()
   xTaskCreatePinnedToCore(IoTTaskThread, "IoTTask", 1024 * 12, NULL, 2, &IoTTaskHandle, 1);
 }
 
-void loop()
-{
-  delay(5);
+void loop() {
+  std::string buffer;  // 用于存储接收到的数据
+
+  while (Serial.available()) {             // 检查是否有数据可读
+    char receivedChar = Serial.read();     // 读取一个字节的数据
+    buffer += receivedChar;                // 将数据拼接到 buffer 中
+
+    if (receivedChar == '\n') {            // 检测到换行符，认为一句话结束
+      // Serial.print("Received: ");          // 打印接收到的完整句子
+      // Serial.println(buffer.c_str());
+
+      AI_API(&buffer);
+      
+      buffer.clear();                      // 清空 buffer，准备接收下一句
+    }
+  }
+
+  delay(5);  // 短暂延时，避免占用过多CPU资源
 }
 
 void IoTTaskThread(void *argument){ 
