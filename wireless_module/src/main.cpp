@@ -42,7 +42,7 @@ void loop()
 void IoTTaskThread(void *argument){ 
   WiFi_BLE_setUp();
 
-  callAPI();
+  testAPI();
 
   for(;;){
     BLEHandler();

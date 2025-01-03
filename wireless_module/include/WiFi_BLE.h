@@ -99,6 +99,6 @@ void WiFiHandler();
 
 void updateLocalTime();
 
-void callAPI();
+void testAPI();
 
 #endif // !_WIFI_BLE_H

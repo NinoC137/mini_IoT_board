@@ -258,7 +258,7 @@ void updateLocalTime()
     }
 }
 
-void callAPI()  //stream流式对话
+void testAPI()  //stream流式对话
 {
     // 检查Wi-Fi连接状态
     if (WiFi.status() == WL_CONNECTED)
@@ -280,7 +280,7 @@ void callAPI()  //stream流式对话
         // 添加system消息
         cJSON *systemMessage = cJSON_CreateObject();
         cJSON_AddStringToObject(systemMessage, "role", "system");
-        cJSON_AddStringToObject(systemMessage, "content", "You are a helpful assistant");
+        cJSON_AddStringToObject(systemMessage, "content", "You are a helpful assistant, but from now, your name is 'Nino小助手', and you are a ESP32 IoT module!");
         cJSON_AddItemToArray(messagesArray, systemMessage);
 
         // 添加user消息
@@ -294,7 +294,7 @@ void callAPI()  //stream流式对话
 
         // 将cJSON对象转换为字符串
         char *requestBody = cJSON_Print(jsonRequest);
-        Serial.println("请求体: " + String(requestBody));
+        // Serial.println("请求体: " + String(requestBody));
 
         // 发送POST请求
         int httpResponseCode = http_ai.POST(requestBody);
@@ -302,7 +302,7 @@ void callAPI()  //stream流式对话
         // 检查响应状态
         if (httpResponseCode > 0)
         {
-            Serial.println("HTTP响应代码: " + String(httpResponseCode));
+            // Serial.println("HTTP响应代码: " + String(httpResponseCode));
 
             // 获取流式响应
             WiFiClient *stream = http_ai.getStreamPtr();
@@ -317,7 +317,7 @@ void callAPI()  //stream流式对话
                     if (line.startsWith("data: "))
                     {
                         String jsonStr = line.substring(6); // 去掉 "data: " 前缀
-                        Serial.println("收到数据: " + jsonStr);
+                        // Serial.println("收到数据: " + jsonStr);
 
                         // 解析JSON数据
                         cJSON *jsonResponse = cJSON_Parse(jsonStr.c_str());
@@ -344,11 +344,15 @@ void callAPI()  //stream流式对话
                         }
                         else
                         {
-                            Serial.println("解析JSON失败: " + jsonStr);
+                            if(jsonStr == "[DONE]"){
+                                Serial.println("回答完毕.\r\n");
+                            }else{
+                                Serial.println("解析JSON失败: " + jsonStr);
+                            }
                         }
                     }
                 }
-                delay(10); // 避免CPU占用过高
+                delay(1); // 避免CPU占用过高
             }
         }
         else
