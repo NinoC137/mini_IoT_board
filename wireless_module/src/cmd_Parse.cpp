@@ -166,12 +166,16 @@ void cmd7(cJSON *root) // 查询时区
 void cmd8(cJSON *root) // 查询设备信息
 {
     cJSON *tx_root = cJSON_CreateObject();
+
+    WiFi_Data.WiFi_store[0].ipv4 = WiFi.localIP();
+
     cJSON_AddItemToObject(tx_root, "res", cJSON_CreateNumber(0));
     cJSON_AddItemToObject(tx_root, "cmd", cJSON_CreateNumber(8));
     cJSON_AddItemToObject(tx_root, "staMAC", cJSON_CreateString(WiFi_Data.WiFi_store[0].MacAddress.c_str()));
     cJSON_AddItemToObject(tx_root, "staIP", cJSON_CreateString(WiFi_Data.WiFi_store[0].ipv4.toString().c_str()));
     cJSON_AddItemToObject(tx_root, "devID", cJSON_CreateString(WiFi_Data.WiFi_store[0].devID.c_str()));
     cJSON_AddItemToObject(tx_root, "devType", cJSON_CreateString(WiFi_Data.WiFi_store[0].devType));
+    cJSON_AddItemToObject(tx_root, "current_time", cJSON_CreateString(ProjectData.time.c_str()));
     char *json_string = cJSON_Print(tx_root);
     // 生成完毕, 准备发送
     TX_Characteristics.setValue(json_string);
