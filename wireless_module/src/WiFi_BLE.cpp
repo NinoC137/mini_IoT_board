@@ -286,7 +286,7 @@ void callAPI()
         // 添加user消息
         cJSON *userMessage = cJSON_CreateObject();
         cJSON_AddStringToObject(userMessage, "role", "user");
-        cJSON_AddStringToObject(userMessage, "content","hello!");
+        cJSON_AddStringToObject(userMessage, "content","你好!");
         cJSON_AddItemToArray(messagesArray, userMessage);
 
         // 添加stream字段
@@ -302,12 +302,13 @@ void callAPI()
         // 检查响应状态
         if (httpResponseCode > 0)
         {
-            String response = http_ai.getString();
+            String* response = new String(http_ai.getString());
+            response->reserve(1024*6);
             Serial.println("HTTP响应代码: " + String(httpResponseCode));
-            Serial.println("响应内容: " + response);
+            Serial.println("响应内容: " + *response);
 
             // 解析响应数据
-            cJSON *jsonResponse = cJSON_Parse(response.c_str());
+            cJSON *jsonResponse = cJSON_Parse(response->c_str());
             if (jsonResponse != NULL)
             {
                 cJSON *choicesArray = cJSON_GetObjectItemCaseSensitive(jsonResponse, "choices");
@@ -328,10 +329,12 @@ void callAPI()
                     }
                 }
                 cJSON_Delete(jsonResponse);
+                delete response;
             }
             else
             {
                 Serial.println("解析JSON响应失败");
+                delete response;
             }
         }
         else
@@ -342,6 +345,7 @@ void callAPI()
         // 释放内存
         cJSON_Delete(jsonRequest);
         free(requestBody);
+        
 
         // 结束HTTP请求
         http_ai.end();
