@@ -4,8 +4,8 @@ WiFiClient client; // ESP32设置为客户端, TCP连接服务器
 const IPAddress serverIP(192, 168, 1, 1);
 uint16_t serverPort = 8888;
 
-const char* apiUrl = "https://api.deepseek.com/chat/completions";
-const char* apiKey = "sk-96a3f94798ed41e1a44b5b997a3c27f4";
+const char *apiUrl = "https://api.deepseek.com/chat/completions";
+const char *apiKey = "sk-96a3f94798ed41e1a44b5b997a3c27f4";
 
 String readTCP;
 
@@ -258,7 +258,7 @@ void updateLocalTime()
     }
 }
 
-void callAPI()
+void callAPI()  //stream流式对话
 {
     // 检查Wi-Fi连接状态
     if (WiFi.status() == WL_CONNECTED)
@@ -286,11 +286,11 @@ void callAPI()
         // 添加user消息
         cJSON *userMessage = cJSON_CreateObject();
         cJSON_AddStringToObject(userMessage, "role", "user");
-        cJSON_AddStringToObject(userMessage, "content","你好!");
+        cJSON_AddStringToObject(userMessage, "content", "你好!我刚刚通过api访问到了你,请为我重新介绍一下你自己!");
         cJSON_AddItemToArray(messagesArray, userMessage);
 
-        // 添加stream字段
-        cJSON_AddBoolToObject(jsonRequest, "stream", false);
+        // 启用流式传输
+        cJSON_AddBoolToObject(jsonRequest, "stream", true);
 
         // 将cJSON对象转换为字符串
         char *requestBody = cJSON_Print(jsonRequest);
@@ -302,39 +302,53 @@ void callAPI()
         // 检查响应状态
         if (httpResponseCode > 0)
         {
-            String* response = new String(http_ai.getString());
-            response->reserve(1024*6);
             Serial.println("HTTP响应代码: " + String(httpResponseCode));
-            Serial.println("响应内容: " + *response);
 
-            // 解析响应数据
-            cJSON *jsonResponse = cJSON_Parse(response->c_str());
-            if (jsonResponse != NULL)
+            // 获取流式响应
+            WiFiClient *stream = http_ai.getStreamPtr();
+            while (http_ai.connected())
             {
-                cJSON *choicesArray = cJSON_GetObjectItemCaseSensitive(jsonResponse, "choices");
-                if (cJSON_IsArray(choicesArray))
+                if (stream->available())
                 {
-                    cJSON *firstChoice = cJSON_GetArrayItem(choicesArray, 0);
-                    if (firstChoice != NULL)
+                    String line = stream->readStringUntil('\n');
+                    line.trim(); // 去除换行符和空格
+
+                    // 检查是否为有效数据行
+                    if (line.startsWith("data: "))
                     {
-                        cJSON *message = cJSON_GetObjectItemCaseSensitive(firstChoice, "message");
-                        if (message != NULL)
+                        String jsonStr = line.substring(6); // 去掉 "data: " 前缀
+                        Serial.println("收到数据: " + jsonStr);
+
+                        // 解析JSON数据
+                        cJSON *jsonResponse = cJSON_Parse(jsonStr.c_str());
+                        if (jsonResponse != NULL)
                         {
-                            cJSON *content = cJSON_GetObjectItemCaseSensitive(message, "content");
-                            if (cJSON_IsString(content) && (content->valuestring != NULL))
+                            cJSON *choicesArray = cJSON_GetObjectItemCaseSensitive(jsonResponse, "choices");
+                            if (cJSON_IsArray(choicesArray))
                             {
-                                Serial.println("AI回复: " + String(content->valuestring));
+                                cJSON *firstChoice = cJSON_GetArrayItem(choicesArray, 0);
+                                if (firstChoice != NULL)
+                                {
+                                    cJSON *delta = cJSON_GetObjectItemCaseSensitive(firstChoice, "delta");
+                                    if (delta != NULL)
+                                    {
+                                        cJSON *content = cJSON_GetObjectItemCaseSensitive(delta, "content");
+                                        if (cJSON_IsString(content) && (content->valuestring != NULL))
+                                        {
+                                            Serial.print(content->valuestring); // 打印流式内容
+                                        }
+                                    }
+                                }
                             }
+                            cJSON_Delete(jsonResponse);
+                        }
+                        else
+                        {
+                            Serial.println("解析JSON失败: " + jsonStr);
                         }
                     }
                 }
-                cJSON_Delete(jsonResponse);
-                delete response;
-            }
-            else
-            {
-                Serial.println("解析JSON响应失败");
-                delete response;
+                delay(10); // 避免CPU占用过高
             }
         }
         else
@@ -345,7 +359,6 @@ void callAPI()
         // 释放内存
         cJSON_Delete(jsonRequest);
         free(requestBody);
-        
 
         // 结束HTTP请求
         http_ai.end();
