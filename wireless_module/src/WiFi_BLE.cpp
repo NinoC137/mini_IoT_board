@@ -22,7 +22,7 @@ int cJsonParseEnd;
 // WiFi信息存储对象, 存储3个WiFi信息
 WiFiData WiFi_Data;
 // HTTP访问域名对象
-// HTTPClient http;
+HTTPClient http;
 // 心跳包对象,存储心跳包在线时间与发送计数
 HeartBeatPacket HeartBeat;
 // 事件日志包, 存储各类信息
@@ -196,72 +196,38 @@ void BLEHandler()
     }
 }
 
-// void WiFiHandler()
-// {
-//     // WIFI连接服务器部分
-//     int httpCode = http.GET();
-//     if (httpCode > 0)
-//     {
-//         if (httpCode == HTTP_CODE_OK) // HTTP请求无异常
-//         {
-//             WiFi_json_root = (char *)http.getString().c_str(); // 读取get到的json串
-//             Serial.println(WiFi_json_root);
+void WiFiHandler()
+{
+    // WIFI连接服务器部分
+    int httpCode = http.GET();
+    if (httpCode > 0)
+    {
+        if (httpCode == HTTP_CODE_OK) // HTTP请求无异常
+        {
+            WiFi_json_root = (char *)http.getString().c_str(); // 读取get到的json串
+            Serial.println(WiFi_json_root);
 
-//             std::string post_Payload("ESP32 POST TEST");
+            std::string post_Payload("ESP32 POST TEST");
 
-//             cJSON *root = cJSON_Parse(WiFi_json_root);
-//             if (root == NULL)
-//             {
-//                 Serial.printf("Error before: [%s]\n", cJSON_GetErrorPtr());
-//             }
-//             cJSON *cmd = cJSON_GetObjectItem(root, "cmd");
+            cJSON *root = cJSON_Parse(WiFi_json_root);
+            if (root == NULL)
+            {
+                Serial.printf("Error before: [%s]\n", cJSON_GetErrorPtr());
+            }
+            cJSON *cmd = cJSON_GetObjectItem(root, "cmd");
 
-//             switch (cmd->valueint)
-//             {
-//             case 1:
-//                 cmd1();
-//                 break;
-//             case 2:
-//                 cmd2(root);
-//                 break;
-//             case 3:
-//                 cmd3(root);
-//                 break;
-//             case 6:
-//                 cmd6(root);
-//                 break;
-//             case 7:
-//                 cmd7(root);
-//                 break;
-//             case 8:
-//                 cmd8(root);
-//                 break;
-//             case 12:
-//                 cmd12(root);
-//                 break;
-//             case 13:
-//                 cmd13(root);
-//                 break;
-//             case 14:
-//                 cmd14(root);
-//                 break;
-//             case 15:
-//                 cmd15(root);
-//                 break;
-//             case 17:
-//                 cmd17();
-//                 break;
-//             default:
-//                 Serial.printf("error cmd!\r\n");
+            switch (cmd->valueint)
+            {
+            default:
+                Serial.printf("error cmd!\r\n");
+                http.POST(post_Payload.c_str());
+                break;
+            }
 
-//                 http.POST(post_Payload.c_str());
-//                 break;
-//             }
-
-//             cJSON_Delete(root);
-//         }
-//     }
-// }
+            cJSON_Delete(root);
+        }
+    }
+}
 
 void updateLocalTime()
 {

@@ -6,7 +6,7 @@
 #include <sstream>
 
 #include "WiFi.h"
-// #include "HTTPClient.h"
+#include "HTTPClient.h"
 
 #include "cJSON.h"
 #include "cmd_Parse.h"
